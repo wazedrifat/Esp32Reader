@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Text;
 
@@ -49,7 +50,7 @@ namespace Esp32Reader
         {
             string CustomGameSettingPath = @$"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}Low\CodeSimBD\Driving-Simulator\GameSetting.json";
             this.Esp32Setting = JsonConvert.DeserializeObject<GameSetting>(File.ReadAllText(CustomGameSettingPath))?.Esp32;
-            this.SerialPortForSteering = new SerialPort(this.Esp32Setting.PortNameForSteering, this.Esp32Setting.BaudRate);
+            //this.SerialPortForSteering = new SerialPort(this.Esp32Setting.PortNameForSteering, this.Esp32Setting.BaudRate);
             this.SerialPortForOther = new SerialPort(this.Esp32Setting.PortNameForOther, this.Esp32Setting.BaudRate);
             OpenSerialPort();
             RecieveESPDataLoop();
@@ -57,26 +58,26 @@ namespace Esp32Reader
 
         void OnDestroy()
         {
-            this.SerialPortForSteering.Close();
+            //this.SerialPortForSteering.Close();
             this.SerialPortForOther.Close();
         }
 
         void OpenSerialPort()
         {
             bool err = false;
-            if (!this.SerialPortForSteering.IsOpen)
-            {
-                try
-                {
-                    this.SerialPortForSteering.Open();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to open steering serial port cuz {ex.Message}");
-                    err = true;
-                }
+            //if (!this.SerialPortForSteering.IsOpen)
+            //{
+            //    try
+            //    {
+            //        this.SerialPortForSteering.Open();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Failed to open steering serial port cuz {ex.Message}");
+            //        err = true;
+            //    }
 
-            }
+            //}
 
             if (!this.SerialPortForOther.IsOpen)
             {
@@ -96,13 +97,21 @@ namespace Esp32Reader
         {
             Task.Run(() =>
             {
+                var sw = new Stopwatch();
                 while (true)
                 {
-                    if (this.SerialPortForSteering.IsOpen)
-                        this.Esp32StringSteeringData = this.SerialPortForSteering.ReadLine();
+                    sw.Restart();
+                    //if (this.SerialPortForSteering.IsOpen)
+                    //    this.Esp32StringSteeringData = this.SerialPortForSteering.ReadLine();
                     if (this.SerialPortForOther.IsOpen)
+                    {
                         this.Esp32StringOtherData = this.SerialPortForOther.ReadLine();
+                        this.Esp32StringOtherData = this.SerialPortForOther.ReadLine();
+                    }
+                    Console.Write(sw.ElapsedMilliseconds + "\t");
                     RecieveESPData();
+                    sw.Stop();
+                    Console.WriteLine(sw.ElapsedMilliseconds);
                 }
             });
         }
@@ -127,15 +136,15 @@ namespace Esp32Reader
                 Status = (CarStatus)int.Parse(integers[4]),
             };
 
-            var statuses = new StringBuilder();
-            if (Data.HasStatus(CarStatus.HeadLight)) statuses.Append("HeadLight-");
-            if (Data.HasStatus(CarStatus.Horn)) statuses.Append("Horn-");
-            if (Data.HasStatus(CarStatus.Engine)) statuses.Append("engine-");
-            if (Data.HasStatus(CarStatus.Wiper)) statuses.Append("wiper-");
-            if (Data.HasStatus(CarStatus.LeftIndicator)) statuses.Append("LeftIdicatior-");
-            if (Data.HasStatus(CarStatus.RightIndicator)) statuses.Append("RightIndicator-");
+            //var statuses = new StringBuilder();
+            //if (Data.HasStatus(CarStatus.HeadLight)) statuses.Append("HeadLight-");
+            //if (Data.HasStatus(CarStatus.Horn)) statuses.Append("Horn-");
+            //if (Data.HasStatus(CarStatus.Engine)) statuses.Append("engine-");
+            //if (Data.HasStatus(CarStatus.Wiper)) statuses.Append("wiper-");
+            //if (Data.HasStatus(CarStatus.LeftIndicator)) statuses.Append("LeftIdicatior-");
+            //if (Data.HasStatus(CarStatus.RightIndicator)) statuses.Append("RightIndicator-");
 
-            Console.WriteLine($"{Data.Steering} & {Data.Gear},{Data.Accerlator},{Data.Clutch},{Data.Break},{Convert.ToString((int)Data.Status, 2)} -> {statuses}");
+            //Console.WriteLine($"{Data.Steering} & {Data.Gear},{Data.Accerlator},{Data.Clutch},{Data.Break},{Convert.ToString((int)Data.Status, 2)} -> {statuses}");
         }
 
         private float Normalize(string value, float rangeDiff, float partialValue, PropertyValue property)
