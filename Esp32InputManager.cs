@@ -1,11 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using System;
 using System.Diagnostics;
+using System.IO;
+using Newtonsoft.Json;
 using System.IO.Ports;
 using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Esp32Reader
 {
-    public class Esp32InputManager
+    public class Esp32InputManager : MonoBehaviour
     {
         private Esp32Setting Esp32Setting;
         private SerialPort SerialPortForSteering;
@@ -46,7 +50,7 @@ namespace Esp32Reader
         }
         #endregion
 
-        public Esp32InputManager()
+        public void Start()
         {
             string CustomGameSettingPath = @$"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}Low\CodeSimBD\Driving-Simulator\GameSetting.json";
             this.Esp32Setting = JsonConvert.DeserializeObject<GameSetting>(File.ReadAllText(CustomGameSettingPath))?.Esp32;
@@ -73,7 +77,7 @@ namespace Esp32Reader
             //    }
             //    catch (Exception ex)
             //    {
-            //        Console.WriteLine($"Failed to open steering serial port cuz {ex.Message}");
+            //        Debug.Log($"Failed to open steering serial port cuz {ex.Message}");
             //        err = true;
             //    }
 
@@ -87,7 +91,7 @@ namespace Esp32Reader
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to open other serial port cuz {ex.Message}");
+                    UnityEngine.Debug.Log($"Failed to open other serial port cuz {ex.Message}");
                     err = true;
                 }
             }
@@ -108,10 +112,12 @@ namespace Esp32Reader
                         this.Esp32StringOtherData = this.SerialPortForOther.ReadLine();
                         this.Esp32StringOtherData = this.SerialPortForOther.ReadLine();
                     }
-                    Console.Write(sw.ElapsedMilliseconds + "\t");
+
+                    string elapsed = sw.ElapsedMilliseconds.ToString();
+
                     RecieveESPData();
                     sw.Stop();
-                    Console.WriteLine(sw.ElapsedMilliseconds);
+                    UnityEngine.Debug.Log(elapsed +" " + sw.ElapsedMilliseconds);
                 }
             });
         }
@@ -144,7 +150,7 @@ namespace Esp32Reader
             //if (Data.HasStatus(CarStatus.LeftIndicator)) statuses.Append("LeftIdicatior-");
             //if (Data.HasStatus(CarStatus.RightIndicator)) statuses.Append("RightIndicator-");
 
-            //Console.WriteLine($"{Data.Steering} & {Data.Gear},{Data.Accerlator},{Data.Clutch},{Data.Break},{Convert.ToString((int)Data.Status, 2)} -> {statuses}");
+            //Debug.Log($"{Data.Steering} & {Data.Gear},{Data.Accerlator},{Data.Clutch},{Data.Break},{Convert.ToString((int)Data.Status, 2)} -> {statuses}");
         }
 
         private float Normalize(string value, float rangeDiff, float partialValue, PropertyValue property)
@@ -161,5 +167,6 @@ namespace Esp32Reader
             return Math.Clamp(partialValue + floatValue * rangeDiff, property.Expectation.MinValue, property.Expectation.MaxValue);
         }
     }
+
 
 }
